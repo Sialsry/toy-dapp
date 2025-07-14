@@ -1,0 +1,129 @@
+.token-detail-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
+  padding: 28px 22px 18px 22px;
+  margin: 30px 0 0 0;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.18);
+  min-width: 260px;
+  max-width: 340px;
+  color: #fff;
+  position: relative;
+  animation: fadeInUp 0.4s;
+}
+
+.token-detail-card h3 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 1.15rem;
+  text-align: center;
+}
+
+.token-detail-card .detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.token-detail-card .detail-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+.token-detail-card .label {
+  font-weight: bold;
+  color: #fff;
+  font-size: 0.98rem;
+}
+.token-detail-card .value {
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-size: 0.98rem;
+  background: rgba(0,0,0,0.18);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.close-btn:hover {
+  opacity: 1;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+} 
+
+.token-detail-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 22px;
+  padding: 36px 32px 24px 32px;
+  min-width: 280px;
+  max-width: 400px;
+  color: #fff;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.28);
+  border: 1.5px solid rgba(255,255,255,0.22);
+  backdrop-filter: blur(18px);
+  animation: fadeInUp 0.4s;
+}
+.token-detail-popup h3 {
+  margin-top: 0;
+  margin-bottom: 22px;
+  font-size: 1.18rem;
+  text-align: center;
+}
+.token-detail-popup .detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+.token-detail-popup .detail-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+.token-detail-popup .label {
+  font-weight: bold;
+  color: #fff;
+  font-size: 1.01rem;
+}
+.token-detail-popup .value {
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-size: 1.01rem;
+  background: rgba(0,0,0,0.18);
+  padding: 5px 12px;
+  border-radius: 7px;
+}
+.token-detail-popup .close-btn {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.7rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.token-detail-popup .close-btn:hover {
+  opacity: 1;
+} 

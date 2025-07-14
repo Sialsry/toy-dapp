@@ -22,6 +22,8 @@ contract SocialGraph is ERC1155, Ownable {
     mapping(address => uint256) public userToTokenId;
     // 토큰 ID와 원본 사용자 주소를 매핑
     mapping(uint256 => address) public tokenIdToUser;
+    // 연결 관계 저장 (tokenId1 < tokenId2인 경우에만 저장)
+    mapping(uint256 => mapping(uint256 => bool)) public connections;
 
     // 이벤트 정의
     event UserTokenCreated(address indexed user, uint256 indexed tokenId);
@@ -30,6 +32,7 @@ contract SocialGraph is ERC1155, Ownable {
         address indexed userB,
         uint256 amount
     );
+    // Transfer 이벤트는 ERC1155에서 자동으로 발생하므로 별도 정의 불필요
 
     /**
      * @dev 컨트랙트 생성자.
@@ -133,6 +136,131 @@ contract SocialGraph is ERC1155, Ownable {
             ""
         );
 
+        // 연결 관계 저장 (작은 토큰 ID를 키로 사용)
+        uint256 smallerTokenId = currentUserTokenId < otherUserTokenId
+            ? currentUserTokenId
+            : otherUserTokenId;
+        uint256 largerTokenId = currentUserTokenId < otherUserTokenId
+            ? otherUserTokenId
+            : currentUserTokenId;
+        connections[smallerTokenId][largerTokenId] = true;
+
         emit ConnectionMade(_currentUser, _otherUser, _amount);
+    }
+
+    /**
+     * @dev 사용자가 보유한 모든 토큰의 잔액을 조회합니다.
+     * @param _user 조회할 사용자 주소
+     * @return tokenIds 토큰 ID 배열
+     * @return balances 해당 토큰들의 잔액 배열
+     */
+    function getUserTokenBalances(
+        address _user
+    )
+        external
+        view
+        returns (uint256[] memory tokenIds, uint256[] memory balances)
+    {
+        uint256 userTokenId = userToTokenId[_user];
+        if (userTokenId == 0) {
+            return (new uint256[](0), new uint256[](0));
+        }
+
+        // 현재 사용자가 보유한 모든 토큰을 찾기 위해 Transfer 이벤트를 활용하는 대신
+        // 효율적인 방법으로 구현 (실제로는 이벤트 기반으로 프론트엔드에서 처리)
+        uint256[] memory tempTokenIds = new uint256[](_tokenIdCounter);
+        uint256[] memory tempBalances = new uint256[](_tokenIdCounter);
+        uint256 count = 0;
+
+        for (uint256 i = 1; i <= _tokenIdCounter; i++) {
+            uint256 balance = balanceOf(_user, i);
+            if (balance > 0) {
+                tempTokenIds[count] = i;
+                tempBalances[count] = balance;
+                count++;
+            }
+        }
+
+        // 정확한 크기로 배열 생성
+        tokenIds = new uint256[](count);
+        balances = new uint256[](count);
+
+        for (uint256 i = 0; i < count; i++) {
+            tokenIds[i] = tempTokenIds[i];
+            balances[i] = tempBalances[i];
+        }
+    }
+
+    /**
+     * @dev 연결된 토큰들 간의 교환 관계를 조회합니다.
+     * @param _connectedTokenIds 연결된 토큰 ID 배열
+     * @return connections 연결 관계 배열 (각 요소는 [tokenId1, tokenId2] 형태)
+     */
+    function getConnectedTokensRelations(
+        uint256[] memory _connectedTokenIds
+    ) external view returns (uint256[][] memory connections) {
+        uint256 connectionCount = 0;
+        uint256 maxConnections = (_connectedTokenIds.length *
+            (_connectedTokenIds.length - 1)) / 2; // 최대 연결 수
+        uint256[][] memory tempConnections = new uint256[][](maxConnections);
+
+        // 각 토큰 쌍에 대해 저장된 연결 관계 확인
+        for (uint256 i = 0; i < _connectedTokenIds.length; i++) {
+            for (uint256 j = i + 1; j < _connectedTokenIds.length; j++) {
+                uint256 tokenId1 = _connectedTokenIds[i];
+                uint256 tokenId2 = _connectedTokenIds[j];
+
+                // 작은 토큰 ID를 키로 사용하여 연결 관계 확인
+                uint256 smallerTokenId = tokenId1 < tokenId2
+                    ? tokenId1
+                    : tokenId2;
+                uint256 largerTokenId = tokenId1 < tokenId2
+                    ? tokenId2
+                    : tokenId1;
+
+                if (connections[smallerTokenId][largerTokenId]) {
+                    uint256[] memory connection = new uint256[](2);
+                    connection[0] = tokenId1;
+                    connection[1] = tokenId2;
+                    tempConnections[connectionCount] = connection;
+                    connectionCount++;
+                }
+            }
+        }
+
+        // 정확한 크기로 배열 생성
+        connections = new uint256[][](connectionCount);
+        for (uint256 i = 0; i < connectionCount; i++) {
+            connections[i] = tempConnections[i];
+        }
+    }
+
+    /**
+     * @dev 특정 토큰의 소유자가 다른 토큰을 보유하고 있는지 확인합니다.
+     * @param _tokenId 확인할 토큰 ID
+     * @param _otherTokenIds 확인할 다른 토큰 ID 배열
+     * @return hasTokens 각 토큰 보유 여부 배열
+     */
+    function checkTokenOwnerHasOtherTokens(
+        uint256 _tokenId,
+        uint256[] memory _otherTokenIds
+    ) external view returns (bool[] memory hasTokens) {
+        address tokenOwner = tokenIdToUser[_tokenId];
+        if (tokenOwner == address(0)) {
+            return new bool[](_otherTokenIds.length);
+        }
+
+        hasTokens = new bool[](_otherTokenIds.length);
+        for (uint256 i = 0; i < _otherTokenIds.length; i++) {
+            hasTokens[i] = balanceOf(tokenOwner, _otherTokenIds[i]) > 0;
+        }
+    }
+
+    /**
+     * @dev 현재까지 발행된 토큰의 총 개수를 반환합니다.
+     * @return 총 토큰 개수
+     */
+    function getTokenCount() external view returns (uint256) {
+        return _tokenIdCounter;
     }
 }
